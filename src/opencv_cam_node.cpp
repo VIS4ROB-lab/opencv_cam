@@ -109,6 +109,20 @@ OpencvCamNode::OpencvCamNode(const rclcpp::NodeOptions &options)
     }
   }
 
+  auto qos_profile =
+      rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_default));
+  auto qos_override_options = rclcpp::QosOverridingOptions({
+      rclcpp::QosPolicyKind::Depth,
+      rclcpp::QosPolicyKind::Durability,
+      rclcpp::QosPolicyKind::History,
+      rclcpp::QosPolicyKind::Reliability,
+  });
+
+  rclcpp::PublisherOptions pub_options;
+  pub_options.qos_overriding_options = qos_override_options;
+  rclcpp::SubscriptionOptions sub_options;
+  sub_options.qos_overriding_options = qos_override_options;
+
   assert(!cxt_.camera_info_path_
               .empty());  // readCalibration will crash if file_name is ""
   std::string camera_name;
@@ -116,19 +130,21 @@ OpencvCamNode::OpencvCamNode(const rclcpp::NodeOptions &options)
           cxt_.camera_info_path_, camera_name, camera_info_msg_)) {
     RCLCPP_INFO(get_logger(), "got camera info for '%s'", camera_name.c_str());
     camera_info_msg_.header.frame_id = cxt_.camera_frame_id_;
-    camera_info_pub_ =
-        create_publisher<sensor_msgs::msg::CameraInfo>("camera_info", 10);
+    camera_info_pub_ = create_publisher<sensor_msgs::msg::CameraInfo>(
+        "camera_info", qos_profile);
   } else {
     RCLCPP_ERROR(get_logger(), "cannot get camera info, will not publish");
     camera_info_pub_ = nullptr;
   }
 
   if (!cxt_.info_only_) {
-    image_pub_ = create_publisher<sensor_msgs::msg::Image>("image_raw", 10);
+    image_pub_ = image_transport::create_publisher(
+        this, "image_raw", rmw_qos_profile_default, pub_options);
   } else {
-    image_sub_ = create_subscription<sensor_msgs::msg::Image>(
-        "image_raw", 10,
-        std::bind(&OpencvCamNode::image_callback, this, std::placeholders::_1));
+    image_sub_ = image_transport::create_subscription(
+        this, "image_raw",
+        std::bind(&OpencvCamNode::image_callback, this, std::placeholders::_1),
+        cxt_.in_transport_, rmw_qos_profile_default, sub_options);
   }
 
   // Run loop on it's own thread
@@ -176,7 +192,7 @@ void OpencvCamNode::loop() {
       image_msg->data.assign(frame.datastart, frame.dataend);
 
       // Publish
-      image_pub_->publish(std::move(image_msg));
+      image_pub_.publish(std::move(image_msg));
 
       if (camera_info_pub_) {
         camera_info_msg_.header.stamp = stamp;
@@ -198,7 +214,7 @@ void OpencvCamNode::loop() {
 }
 
 void OpencvCamNode::image_callback(
-    const sensor_msgs::msg::Image::SharedPtr msg) {
+    const sensor_msgs::msg::Image::ConstSharedPtr msg) {
   camera_info_msg_.header.stamp = msg->header.stamp;
   camera_info_pub_->publish(camera_info_msg_);
 }

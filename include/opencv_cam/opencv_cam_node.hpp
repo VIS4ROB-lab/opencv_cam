@@ -1,6 +1,7 @@
 #ifndef OPENCV_CAM_HPP
 #define OPENCV_CAM_HPP
 
+#include "image_transport/image_transport.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv_cam/camera_context.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -21,8 +22,8 @@ class OpencvCamNode : public rclcpp::Node {
   int publish_fps_;
   rclcpp::Time next_stamp_;
 
-  rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr image_pub_;
-  rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr image_sub_;
+  image_transport::Subscriber image_sub_;
+  image_transport::Publisher image_pub_;
   rclcpp::Publisher<sensor_msgs::msg::CameraInfo>::SharedPtr camera_info_pub_;
 
  public:
@@ -30,7 +31,7 @@ class OpencvCamNode : public rclcpp::Node {
   ~OpencvCamNode() override;
 
  private:
-  void image_callback(const sensor_msgs::msg::Image::SharedPtr msg);
+  void image_callback(const sensor_msgs::msg::Image::ConstSharedPtr msg);
   void validate_parameters();
   void loop();
 };

@@ -9,6 +9,7 @@
 namespace opencv_cam {
 
 #define OPENCV_CAM_ALL_PARAMS                                                  \
+  CXT_MACRO_MEMBER(in_transport, std::string, "raw")                           \
   CXT_MACRO_MEMBER(info_only, bool, false)                                     \
   CXT_MACRO_MEMBER(file, bool,                                                 \
                    false)       /* Read from file vs. read from device */      \
