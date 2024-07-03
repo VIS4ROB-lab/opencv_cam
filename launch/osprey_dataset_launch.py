@@ -36,22 +36,6 @@ def generate_launch_description():
         output='screen'
     )
 
-    # play_bag = ComposableNodeContainer(
-    #     namespace='',
-    #     name='play_bag_container',
-    #     package='rclcpp_components',
-    #     executable='component_container',
-    #     composable_node_descriptions=[
-    #         ComposableNode(
-    #             package='rosbag2_transport',
-    #             plugin='rosbag2_transport::Player',
-    #             name='player',
-    #             parameters=["/home/rborder/data/osprey/osprey_play.yaml"],
-    #         ),
-    #     ],
-    #     output='screen',
-    # )
-
     ld = LaunchDescription()
     ld.add_action(cam0)
     ld.add_action(cam1)
