@@ -12,6 +12,14 @@ def generate_launch_description():
 
     opencv_cam_path = get_package_share_directory('opencv_cam')
 
+    cam_container = ComposableNodeContainer(
+        namespace='',
+        package='rclcpp_components',
+        name='cam_container',
+        executable='component_container_mt',
+        output='screen'
+    )
+
     cam0 = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(opencv_cam_path + '/launch/cam_rectify_launch.py'),
         launch_arguments = {
@@ -37,6 +45,7 @@ def generate_launch_description():
     )
 
     ld = LaunchDescription()
+    ld.add_action(cam_container)
     ld.add_action(cam0)
     ld.add_action(cam1)
     ld.add_action(cam2)

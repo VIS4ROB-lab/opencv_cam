@@ -1,7 +1,7 @@
 
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument, ExecuteProcess, GroupAction, LogInfo
-from launch_ros.actions import ComposableNodeContainer, Node
+from launch_ros.actions import ComposableNodeContainer, Node, LoadComposableNodes
 from launch_ros.descriptions import ComposableNode
 from launch.substitutions import LaunchConfiguration,PythonExpression,TextSubstitution,PathJoinSubstitution
 
@@ -66,23 +66,19 @@ def generate_launch_description():
                 ('image_rect', [TextSubstitution(text='/alphasense_driver_ros/'), cam_name, TextSubstitution(text='/color/image_rect')])
             ],
             extra_arguments=[{'use_intra_process_comms': True}],
-        )
+    )
 
-    cam_container = ComposableNodeContainer(
-        namespace='',
-        package='rclcpp_components',
-        name=[cam_name, TextSubstitution(text='_rectify_container')],
-        executable='component_container_mt',
+    composable_nodes = LoadComposableNodes(
+        target_container='cam_container',
         composable_node_descriptions=[
             cam_decompress,
             cam_info,
             cam_rectify,
         ],
-        output='screen'
-        )
+    )
 
     ld = LaunchDescription()
     ld.add_action(cam_name_arg)
-    ld.add_action(cam_container)
+    ld.add_action(composable_nodes)
 
     return ld
