@@ -7,13 +7,18 @@ from launch.substitutions import LaunchConfiguration,PythonExpression,TextSubsti
 
 def generate_launch_description():
 
+    cam_name = LaunchConfiguration('cam_name')
+    container_name = LaunchConfiguration('container_name')
+
     cam_name_arg = DeclareLaunchArgument(
         name='cam_name', 
         default_value="cam0", 
-        description="camera name") 
+        description="camera name")
+    container_name_arg = DeclareLaunchArgument(
+        name='container_name', 
+        default_value="osprey_container", 
+        description="container name") 
     
-    cam_name = LaunchConfiguration('cam_name')
-
     cam_decompress = ComposableNode(
         namespace='',
         package='image_transport',
@@ -69,7 +74,7 @@ def generate_launch_description():
     )
 
     composable_nodes = LoadComposableNodes(
-        target_container='cam_container',
+        target_container=container_name,
         composable_node_descriptions=[
             cam_decompress,
             cam_info,
@@ -79,6 +84,7 @@ def generate_launch_description():
 
     ld = LaunchDescription()
     ld.add_action(cam_name_arg)
+    ld.add_action(container_name_arg)
     ld.add_action(composable_nodes)
 
     return ld
